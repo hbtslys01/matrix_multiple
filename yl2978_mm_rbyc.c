@@ -7,22 +7,17 @@
 int main()
 {
     int dim;
-    printf("\nPlease enter the dimension of two square matrices to be multiplied(It should be an integer): ");
+    printf("\nPlease enter the dimension of two square matrices to be multiplied: ");
     scanf("%d", &dim);
-    double *matrix1[dim], *matrix2[dim], *matrix_result[dim];
+    double *matrix1 = (double *)malloc(dim * dim * sizeof(double));
+    double *matrix2 = (double *)malloc(dim * dim * sizeof(double));
+    double *matrix_result = (double *)malloc(dim * dim * sizeof(double));
     srand48(1);
-    for (int i = 0; i < dim; i++)
-    {
-        matrix1[i] = (double *)malloc(dim * sizeof(double));
-        matrix2[i] = (double *)malloc(dim * sizeof(double));
-        matrix_result[i] = (double *)malloc(dim * sizeof(double));
-    }
     for (int i = 0; i < dim; i++)
         for (int j = 0; j < dim; j++)
         {
-            matrix1[i][j] = drand48();
-            matrix2[i][j] = drand48();
-            //printf("\nmatrix1[%d][%d] is: % lf", i, j, matrix1[i][j]);
+            *(matrix1 + i * dim + j) = drand48();
+            *(matrix2 + i * dim + j) = drand48();
         }
     struct timespec start, end;
     /* measure monotonic time */
@@ -33,11 +28,15 @@ int main()
         {
             double element = 0.;
             for (int k = 0; k < dim; k++)
-                element += matrix1[i][k] * matrix2[k][j];
-            matrix_result[i][j] = element;
+                element += *(matrix1 + i * dim + k) * (*(matrix2 + k * dim + j));
+            *(matrix_result + i * dim + j) = element;
+            //printf("\nresult[%d][%d] is: % lf", i, j, *(matrix_result + i * dim + j));
         }
     }
+    free(matrix1);
+    free(matrix2);
+    free(matrix_result);
     clock_gettime(CLOCK_MONOTONIC, &end); /* mark the end time */
-    long diff = BILLION * (end.tv_sec - start.tv_sec) + end.tv_nsec - start.tv_nsec;
-    printf("\nelapsed time = %ld nanoseconds\n", diff);
+    double diff = end.tv_sec - start.tv_sec + (double)(end.tv_nsec - start.tv_nsec) / BILLION;
+    printf("\nelapsed time = %lf seconds\n", diff);
 }
