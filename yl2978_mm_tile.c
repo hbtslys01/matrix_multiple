@@ -61,6 +61,6 @@ int main()
             printf("\nresult[%d][%d] is: % lf",
                    i, j, matrix_result[i][j]);*/
     clock_gettime(CLOCK_MONOTONIC, &end); /* mark the end time */
-    long diff = BILLION * (end.tv_sec - start.tv_sec) + end.tv_nsec - start.tv_nsec;
-    printf("\nelapsed time = %ld nanoseconds\n", diff);
+    double diff = end.tv_sec - start.tv_sec + (double)(end.tv_nsec - start.tv_nsec) / BILLION;
+    printf("\nelapsed time = %lf seconds\n", diff);
 }
