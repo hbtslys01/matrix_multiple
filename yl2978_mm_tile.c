@@ -4,43 +4,46 @@
 #include <stdlib.h>
 
 #define BILLION 1000000000L
-void mat_mul(double **mat1, double **mat2, double **result, int pos1, int com,
+int dim;
+void mat_mul(double *mat1, double *mat2, double *result, int pos1, int com,
              int pos2, int size)
 {
+    int c_index = com * dim;
     for (int i = 0; i < size; i++)
     {
         int r_pos = pos1 + i;
+        int r_index = (pos1 + i) * dim;
         for (int j = 0; j < size; j++)
         {
             double element = 0.;
             int c_pos = pos2 + j;
             for (int k = 0; k < size; k++)
-                element += mat1[r_pos][com + k] * mat2[com + k][c_pos];
-            result[r_pos][c_pos] += element;
+            {
+                element += *(mat1 + r_index + com + k) * (*(mat2 + c_index + k * dim + pos2 + j));
+                //printf("\n %lf * %lf ", *(mat1 + r_index + com + k), *(mat2 + c_index + k * dim + pos2 + j));
+            }
+            //element += mat1[r_pos][com + k] * mat2[com + k][c_pos];
+            //result[r_pos][c_pos] += element;
+            *(result + r_index + pos2 + j) += element;
+            //printf("\n result[%d][%d] = %lf", r_pos, c_pos, *(result + r_index + c_pos + pos2 + j));
         }
     }
 }
 int main()
 {
-    int dim, size, num_block;
+    int size, num_block;
     printf("\nPlease enter the dimension of two square matrices to be multiplied, dimension of tiles(the former should be divisible by the latter): ");
     scanf("%d %d", &dim, &size);
     num_block = dim / size;
-    double *matrix1[dim], *matrix2[dim], *matrix_result[dim];
+    double *matrix1 = (double *)malloc(dim * dim * sizeof(double));
+    double *matrix2 = (double *)malloc(dim * dim * sizeof(double));
+    double *matrix_result = (double *)malloc(dim * dim * sizeof(double));
     srand48(1);
-    for (int i = 0; i < dim; i++)
-    {
-        matrix1[i] = (double *)malloc(dim * sizeof(double));
-        matrix2[i] = (double *)malloc(dim * sizeof(double));
-        matrix_result[i] = (double *)malloc(dim * sizeof(double));
-    }
     for (int i = 0; i < dim; i++)
         for (int j = 0; j < dim; j++)
         {
-            matrix1[i][j] = drand48();
-            matrix2[i][j] = drand48();
-            //printf("\nmatrix1[%d][%d] is: % lf; matrix2[%d][%d] is: % lf",
-            //      i, j, matrix1[i][j], i, j, matrix2[i][j]);
+            *(matrix1 + i * dim + j) = drand48();
+            *(matrix2 + i * dim + j) = drand48();
         }
     struct timespec start, end;
     /* measure monotonic time */
@@ -49,17 +52,12 @@ int main()
     {
         for (int j = 0; j < num_block; j++)
         {
-            //printf("\nprocessing %d th, %d th block", i, j);
             for (int k = 0; k < num_block; k++)
             {
                 mat_mul(matrix1, matrix2, matrix_result, i * size, k * size, j * size, size);
             }
         }
     }
-    /*for (int i = 0; i < dim; i++)
-        for (int j = 0; j < dim; j++)
-            printf("\nresult[%d][%d] is: % lf",
-                   i, j, matrix_result[i][j]);*/
     clock_gettime(CLOCK_MONOTONIC, &end); /* mark the end time */
     double diff = end.tv_sec - start.tv_sec + (double)(end.tv_nsec - start.tv_nsec) / BILLION;
     printf("\nelapsed time = %lf seconds\n", diff);
